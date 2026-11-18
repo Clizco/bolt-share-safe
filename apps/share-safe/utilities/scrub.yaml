@@ -12,6 +12,24 @@ placeholder_examples:
 presentation:
   widget: detail
 
+# Offer =scrub on a pasted block (Convert section) when it carries something to mask.
+# Without this, Bolt turns a multi-line paste into a block and a transform app is never offered for it.
+recognize:
+  patterns:
+    - regex: 'Authorization:\s*(?:Bearer|Basic|Token|Bot)\s'
+      flags: i
+    - regex: '(?:Set-Cookie|Cookie):\s*\S'
+      flags: i
+    - regex: '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+    - regex: 'eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.'
+    - regex: '\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'
+    - regex: '\b(?:gh[pousr]_[A-Za-z0-9]{36}|github_pat_|xox[abprs]-|[rs]k_(?:live|test)_|AIza[0-9A-Za-z_-]{35})'
+    - regex: '[a-z][a-z0-9+.-]*://[^\s/:@]+:[^\s/@]+@'
+      flags: i
+    - regex: '"?(?:password|passwd|secret|client_secret|api_key|apikey|access_token|refresh_token)"?\s*[:=]\s*"?[^\s"\[]'
+      flags: i
+  confidence: ambient
+
 transform:
   pipe:
     - replace: { from: '-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----', to: '[REDACTED_PRIVATE_KEY]' }

@@ -1,8 +1,12 @@
 # Scrub secrets before sharing (`=scrub`)
 
-Type `=scrub`, paste a log, HTTP exchange, JSON API response or `.env`, press Enter: you copy
-the same text back with credentials and personal data masked. Everything else is untouched,
-so the paste still explains the bug.
+Paste a log, HTTP exchange, JSON API response or `.env` and copy the same text back with
+credentials and personal data masked. Everything else is untouched, so the paste still explains the
+bug.
+
+- **One line:** type `=scrub`, add a space, paste, then press Enter.
+- **A block:** just paste it. Bolt offers **Convert → Scrub secrets before sharing** when the block
+  contains something to mask, through the app's `recognize` patterns.
 
 ## Who it is for
 
@@ -34,8 +38,11 @@ Status codes, error codes, paths, field names and timestamps stay as they are.
 - **Close to `redact_secrets`.** The schema reserves a `redact_secrets` step that does not run
   yet. This app is what that step could do today with shipped steps, and its tests could serve as
   conformance cases when the built-in step lands.
-- No lookarounds and no nested repeats, so the patterns should work in both JS and RE2/Rust
-  regex dialects. I have not confirmed which dialect Bolt uses.
+- **Built for what Paste-Guard misses.** Bolt's built-in Paste-Guard masks values by their token
+  shape, but in Bolt 0.1.181 it leaves `"password": "..."` and `Cookie:` headers alone. `=scrub`
+  also masks by key name. See [FINDINGS.md](../../FINDINGS.md).
+- Patterns are JavaScript regex, the dialect Bolt's transform engine uses. They contain no nested
+  repeats.
 
 ## Limits
 
@@ -50,8 +57,12 @@ Review the output before you share it.
 
 ## Tests
 
-6 transform tests in `bolt-app.json` (curl, JSON error, `.env`, raw HTTP, private key, and a
-no-secret log that must come back unchanged). Run them offline:
+`bolt-app.json` has 6 transform tests: curl, JSON error, `.env`, raw HTTP, private key, and a
+no-secret log that must come back unchanged. It also has 1 recognizer test, which checks the app
+is offered on blocks with secrets and not on plain logs.
+
+In Bolt 0.1.181 I checked tests 1, 2 and 4 by hand, and Bolt's output matched exactly. Run all of
+them offline:
 
 ```
 node tools/transform-test.mjs apps/share-safe --bolt-apps <path to bolt-apps clone>

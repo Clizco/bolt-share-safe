@@ -96,7 +96,22 @@ for (const f of fs.existsSync(utilDir) ? fs.readdirSync(utilDir) : []) {
 }
 
 let pass = 0, fail = 0, skip = 0;
+// Recognizer tests: a block counts as recognized when any pattern matches somewhere in it
+// (what Bolt does for ambient recognizers on a pasted block, as observed in 0.1.181).
+const recognizes = (app, text) =>
+	(app.recognize?.patterns || []).some((p) => new RegExp(p.regex, p.flags || '').test(text));
+
 for (const t of manifest.tests || []) {
+	if (t.kind === 'recognizer') {
+		const app = apps[t.target];
+		const bad = [
+			...(t.positive || []).filter((s) => !app || !recognizes(app, s)).map((s) => `not recognized: ${JSON.stringify(s)}`),
+			...(t.negative || []).filter((s) => app && recognizes(app, s)).map((s) => `wrongly recognized: ${JSON.stringify(s)}`),
+		];
+		if (bad.length) { fail++; console.log(`FAIL  ${t.name}\n      ${bad.join('\n      ')}`); }
+		else { pass++; console.log(`PASS  ${t.name}`); }
+		continue;
+	}
 	if (t.kind !== 'transform') continue;
 	const app = apps[t.target];
 	if (!app) { console.log(`FAIL  ${t.name}\n      no transform app with id "${t.target}" in utilities/`); fail++; continue; }

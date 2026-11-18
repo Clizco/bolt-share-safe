@@ -50,6 +50,22 @@
       "target": "scrub",
       "input": "2026-11-18T09:00:02Z ERROR POST /v1/invoices 422 VALIDATION_ERROR field=total max_tokens=100",
       "expect": "2026-11-18T09:00:02Z ERROR POST /v1/invoices 422 VALIDATION_ERROR field=total max_tokens=100"
+    },
+    {
+      "kind": "recognizer",
+      "name": "offered on pasted blocks that carry a secret, not on plain logs",
+      "target": "scrub",
+      "positive": [
+        "GET /v1/me HTTP/1.1\nCookie: session=7f3a9c",
+        "{\n  \"status\": 401,\n  \"password\": \"hunter2\"\n}",
+        "curl -H \"Authorization: Bearer abc123def456ghi789\" https://api.example.com",
+        "DATABASE_URL=postgres://acme:s3cr3t@db.example.com:5432/acme"
+      ],
+      "negative": [
+        "2026-11-18T09:00:02Z ERROR POST /v1/invoices 422 VALIDATION_ERROR field=total",
+        "{\n  \"status\": 200,\n  \"items\": 3\n}",
+        "password reset email sent"
+      ]
     }
   ]
 }
