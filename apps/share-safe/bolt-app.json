@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "id": "share-safe",
+  "title": "Scrub secrets before sharing",
+  "role": "Developers and support engineers who paste logs, curl commands and API responses into tickets, chat or an AI assistant",
+  "saves": "Hunting by hand for the bearer token, cookie or API key hidden in a 200-line paste, and the leak when one is missed",
+  "summary": "Type =scrub and paste a log, curl command, HTTP exchange, JSON response or .env. Copy it back with tokens, keys, passwords, cookies and emails masked, and everything else untouched.",
+  "author": { "name": "Abraham", "link": "https://github.com/" },
+  "tier": 2,
+  "permissions": ["copies_to_clipboard", "reads_launcher_input"],
+  "tests": [
+    {
+      "kind": "transform",
+      "name": "curl command with a bearer token and an api key in the query",
+      "target": "scrub",
+      "input": "curl -H \"Authorization: Bearer abc123def456ghi789\" \"https://api.example.com/v1/orders?api_key=k_9f8e7d6c5b4a&limit=10\"",
+      "expect": "curl -H \"Authorization: Bearer [REDACTED]\" \"https://api.example.com/v1/orders?api_key=[REDACTED]&limit=10\""
+    },
+    {
+      "kind": "transform",
+      "name": "JSON error response keeps the diagnosis, loses the secrets",
+      "target": "scrub",
+      "input": "{\n  \"status\": 401,\n  \"error\": \"TOKEN_EXPIRED\",\n  \"user\": \"asha@example.com\",\n  \"access_token\": \"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBQ01FLTEyMyJ9.c2lnbmF0dXJlMTIzNDU2\",\n  \"password\": \"hunter2\"\n}",
+      "expect": "{\n  \"status\": 401,\n  \"error\": \"TOKEN_EXPIRED\",\n  \"user\": \"[EMAIL]\",\n  \"access_token\": \"[REDACTED_JWT]\",\n  \"password\": \"[REDACTED]\"\n}"
+    },
+    {
+      "kind": "transform",
+      "name": "env file with cloud and SaaS keys",
+      "target": "scrub",
+      "input": "AWS_ACCESS_KEY_ID=AKIAABCDEFGHIJKLMNOP\nGITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123456789\nSTRIPE_KEY=sk_test_ABCDEFGHIJ0123456789\nDATABASE_URL=postgres://acme:s3cr3t@db.example.com:5432/acme\nLOG_LEVEL=debug",
+      "expect": "AWS_ACCESS_KEY_ID=[REDACTED_AWS_KEY]\nGITHUB_TOKEN=[REDACTED_GITHUB_TOKEN]\nSTRIPE_KEY=[REDACTED_STRIPE_KEY]\nDATABASE_URL=postgres://[REDACTED]@db.example.com:5432/acme\nLOG_LEVEL=debug"
+    },
+    {
+      "kind": "transform",
+      "name": "raw HTTP exchange with cookies",
+      "target": "scrub",
+      "input": "GET /v1/me HTTP/1.1\nHost: api.example.com\nCookie: session=7f3a9c; csrftoken=b81e\n\nHTTP/1.1 200 OK\nSet-Cookie: session=91be44; HttpOnly; Secure",
+      "expect": "GET /v1/me HTTP/1.1\nHost: api.example.com\nCookie: [REDACTED]\n\nHTTP/1.1 200 OK\nSet-Cookie: [REDACTED]"
+    },
+    {
+      "kind": "transform",
+      "name": "private key block in a config paste",
+      "target": "scrub",
+      "input": "tls:\n  key: |\n-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAexample\nQWERTYexample\n-----END RSA PRIVATE KEY-----\n  port: 8443",
+      "expect": "tls:\n  key: |\n[REDACTED_PRIVATE_KEY]\n  port: 8443"
+    },
+    {
+      "kind": "transform",
+      "name": "text with no secrets comes back unchanged",
+      "target": "scrub",
+      "input": "2026-11-18T09:00:02Z ERROR POST /v1/invoices 422 VALIDATION_ERROR field=total max_tokens=100",
+      "expect": "2026-11-18T09:00:02Z ERROR POST /v1/invoices 422 VALIDATION_ERROR field=total max_tokens=100"
+    }
+  ]
+}

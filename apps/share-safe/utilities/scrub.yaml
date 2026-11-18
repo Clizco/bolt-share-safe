@@ -1,0 +1,31 @@
+schema_version: 1
+runtime: transform
+id: scrub
+chip: scrub
+title: Scrub secrets before sharing
+icon: shield
+description: Paste a log, API response, HTTP request or .env and copy it back with tokens, keys, passwords, cookies and emails masked
+emits: Generic
+placeholder_examples:
+  - "paste a log, HTTP request or API response after =scrub"
+
+presentation:
+  widget: detail
+
+transform:
+  pipe:
+    - replace: { from: '-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----', to: '[REDACTED_PRIVATE_KEY]' }
+    - replace: { from: '(Authorization:\s*(?:Bearer|Basic|Token|Bot)\s+)[^\s"'']+', to: '$1[REDACTED]', flags: 'gi' }
+    - replace: { from: '((?:Set-Cookie|Cookie):\s*)[^\r\n"'']+', to: '$1[REDACTED]', flags: 'gi' }
+    - replace: { from: '((?:X-Api-Key|Api-Key|X-Auth-Token):\s*)[^\s"'']+', to: '$1[REDACTED]', flags: 'gi' }
+    - replace: { from: 'eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}', to: '[REDACTED_JWT]' }
+    - replace: { from: '\b(?:AKIA|ASIA)[A-Z0-9]{16}\b', to: '[REDACTED_AWS_KEY]' }
+    - replace: { from: '\bgh[pousr]_[A-Za-z0-9]{36,}\b', to: '[REDACTED_GITHUB_TOKEN]' }
+    - replace: { from: '\bgithub_pat_[A-Za-z0-9_]{40,}\b', to: '[REDACTED_GITHUB_TOKEN]' }
+    - replace: { from: '\bxox[abprs]-[A-Za-z0-9-]{10,}', to: '[REDACTED_SLACK_TOKEN]' }
+    - replace: { from: '\b[rs]k_(?:live|test)_[A-Za-z0-9]{10,}', to: '[REDACTED_STRIPE_KEY]' }
+    - replace: { from: '\bsk-[A-Za-z0-9_-]{20,}', to: '[REDACTED_API_KEY]' }
+    - replace: { from: '\bAIza[0-9A-Za-z_-]{35}', to: '[REDACTED_GOOGLE_KEY]' }
+    - replace: { from: '([a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/@]+@', to: '$1[REDACTED]@', flags: 'gi' }
+    - replace: { from: '((?:password|passwd|pwd|secret|client_secret|api_key|apikey|api-key|access_token|refresh_token|id_token|token|private_key)"?\s*[:=]\s*"?)[^\["''&\s,}]+', to: '$1[REDACTED]', flags: 'gi' }
+    - replace: { from: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', to: '[EMAIL]' }

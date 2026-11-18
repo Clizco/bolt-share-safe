@@ -1,0 +1,10 @@
+# Private drafts, not for the public repo
+MENSAJE-RAJENDRA.md
+
+# Signing keys and built packs
+*.pem
+*.boltpack
+
+# Local bolt-apps clone used by the runner
+bolt-apps/
+node_modules/
