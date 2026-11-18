@@ -5,7 +5,7 @@
   "role": "Developers and support engineers who paste logs, curl commands and API responses into tickets, chat or an AI assistant",
   "saves": "Hunting by hand for the bearer token, cookie or API key hidden in a 200-line paste, and the leak when one is missed",
   "summary": "Type =scrub and paste a log, curl command, HTTP exchange, JSON response or .env. Copy it back with tokens, keys, passwords, cookies and emails masked, and everything else untouched.",
-  "author": { "name": "Abraham", "link": "https://github.com/" },
+  "author": { "name": "Abraham", "link": "https://github.com/Clizco" },
   "tier": 2,
   "permissions": ["copies_to_clipboard", "reads_launcher_input"],
   "tests": [
